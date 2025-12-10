@@ -5,8 +5,6 @@
 A simple, standalone OSC routing tool with GUI, ETL-style mapping, live debug logging, and external JSON configuration.
 Useful for routing and transforming OSC messages between applications such as **Reaper**, **Resolume**, lighting consoles, controllers, or any OSC-enabled device.
 
----
-
 ## Features
 
 ### ✔ Fixed Listen IP
@@ -42,8 +40,6 @@ Shows:
 Buildable with PyInstaller (`--onefile`).
 Icon support included (`favicon.ico` via resource_path).
 
----
-
 ## Files
 
 ```
@@ -51,8 +47,6 @@ osc_router.py       → main application
 config.json             → user-editable routing configuration
 favicon.ico             → optional app icon
 ```
-
----
 
 ## Configuration
 
@@ -97,8 +91,6 @@ Mappings are stored internally as:
 (in_address, in_value) → (out_address, out_args)
 ```
 
----
-
 ## GUI Overview
 
 ### Inputs
@@ -125,8 +117,6 @@ Shows a real-time stream of:
 * Errors and warnings
 * Config loading details
 
----
-
 ## Build Instructions (PyInstaller)
 
 Make sure you have a virtual environment created and activated.
@@ -151,14 +141,10 @@ dist/osc_router.exe
 
 Place `config.json` next to the EXE.
 
----
-
 ## Running
 
 Simply start the EXE.
 Edit `config.json` before launching if you need custom mappings.
-
----
 
 ## Known Limitations
 
@@ -169,8 +155,6 @@ Edit `config.json` before launching if you need custom mappings.
   * The **first argument**
 
 If more advanced matching is needed (types, multiple args, regex matching), the system can be extended.
-
----
 
 ## Roadmap
 
