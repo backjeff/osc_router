@@ -7,7 +7,7 @@ OSC Mapper GUI with external JSON config and debug log.
     * Listen Port
     * Target IP
     * Target Port
-- Mappings are loaded from config.json in the same folder.
+- Mappings and default IO settings are loaded from config.json in the same folder.
 - All incoming OSC messages are shown in a scrollable debug log.
 """
 
@@ -27,10 +27,17 @@ from pythonosc import dispatcher, osc_server, udp_client
 # CONFIG
 # ============================================================
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 CONFIG_FILENAME = "config.json"
+
+# Routing / mapping config (populated by load_config)
 VALUE_MAP = {}
 FORWARD_UNMAPPED = True
+
+# Defaults for GUI fields (populated/overridden by load_config)
+DEFAULT_LISTEN_PORT = 7000
+DEFAULT_TARGET_IP = "127.0.0.1"
+DEFAULT_TARGET_PORT = 7000
 
 # ============================================================
 # GLOBALS
@@ -80,9 +87,22 @@ def get_local_ip() -> str:
         return "127.0.0.1"
 
 
+def resource_path(relative_path: str) -> str:
+    """
+    Get absolute path to resource (works for dev and for PyInstaller EXE)
+    """
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
+
 def load_config():
-    """Load VALUE_MAP and FORWARD_UNMAPPED from JSON config file."""
+    """
+    Load VALUE_MAP, FORWARD_UNMAPPED and default IO settings
+    (listen_port, target_ip, target_port) from JSON config file.
+    """
     global VALUE_MAP, FORWARD_UNMAPPED
+    global DEFAULT_LISTEN_PORT, DEFAULT_TARGET_IP, DEFAULT_TARGET_PORT
 
     config_path = os.path.join(get_app_dir(), CONFIG_FILENAME)
 
@@ -90,6 +110,9 @@ def load_config():
     if not os.path.exists(config_path):
         default = {
             "forward_unmapped": True,
+            "listen_port": DEFAULT_LISTEN_PORT,
+            "target_ip": DEFAULT_TARGET_IP,
+            "target_port": DEFAULT_TARGET_PORT,
             "mappings": []
         }
         try:
@@ -110,7 +133,20 @@ def load_config():
             return
 
     # forward_unmapped flag
-    FORWARD_UNMAPPED = bool(data.get("forward_unmapped", False))
+    FORWARD_UNMAPPED = bool(data.get("forward_unmapped", True))
+
+    # IO defaults (used to pre-fill the GUI)
+    try:
+        DEFAULT_LISTEN_PORT = int(data.get("listen_port", DEFAULT_LISTEN_PORT))
+    except (TypeError, ValueError):
+        DEFAULT_LISTEN_PORT = 7000
+
+    DEFAULT_TARGET_IP = str(data.get("target_ip", DEFAULT_TARGET_IP))
+
+    try:
+        DEFAULT_TARGET_PORT = int(data.get("target_port", DEFAULT_TARGET_PORT))
+    except (TypeError, ValueError):
+        DEFAULT_TARGET_PORT = 7000
 
     # Build VALUE_MAP dict: (in_address, in_value) -> (out_address, out_args)
     mappings_dict = {}
@@ -127,7 +163,12 @@ def load_config():
         mappings_dict[(in_addr, in_val)] = (out_addr, out_args)
 
     VALUE_MAP = mappings_dict
-    log_gui(f"Loaded {len(VALUE_MAP)} mappings (forward_unmapped={FORWARD_UNMAPPED})")
+    log_gui(
+        f"Loaded {len(VALUE_MAP)} mappings "
+        f"(forward_unmapped={FORWARD_UNMAPPED}, "
+        f"listen_port={DEFAULT_LISTEN_PORT}, "
+        f"target={DEFAULT_TARGET_IP}:{DEFAULT_TARGET_PORT})"
+    )
 
 
 # ============================================================
@@ -207,14 +248,6 @@ def stop_osc_server():
     server_thread = None
     log_gui("OSC server stopped.")
 
-def resource_path(relative_path: str) -> str:
-    """
-    Get absolute path to resource (works for dev and for PyInstaller EXE)
-    """
-    if hasattr(sys, "_MEIPASS"):
-        return os.path.join(sys._MEIPASS, relative_path)
-    return os.path.join(os.path.abspath("."), relative_path)
-
 
 # ============================================================
 # GUI
@@ -226,7 +259,7 @@ class OSCMapperApp(tk.Tk):
         global app_instance
         app_instance = self
 
-        self.title("OTM • OSC Routing v{VERSION}")
+        self.title(f"OSC Router v{VERSION}")
         self.resizable(False, False)
         try:
             self.iconbitmap(resource_path("favicon.ico"))
@@ -236,10 +269,10 @@ class OSCMapperApp(tk.Tk):
         # Fixed host IP (auto-detected)
         self.host_ip = get_local_ip()
 
-        # User-editable vars
-        self.listen_port_var = tk.StringVar(value="7000")
-        self.target_ip_var = tk.StringVar(value="127.0.0.1")
-        self.target_port_var = tk.StringVar(value="7000")
+        # User-editable vars (pre-filled from config)
+        self.listen_port_var = tk.StringVar(value=str(DEFAULT_LISTEN_PORT))
+        self.target_ip_var = tk.StringVar(value=DEFAULT_TARGET_IP)
+        self.target_port_var = tk.StringVar(value=str(DEFAULT_TARGET_PORT))
 
         self.running = False
 
@@ -344,7 +377,7 @@ class OSCMapperApp(tk.Tk):
 # ============================================================
 
 def main():
-    # Load mapping config before GUI starts
+    # Load mapping/config before GUI starts (also sets defaults for GUI)
     load_config()
 
     app = OSCMapperApp()

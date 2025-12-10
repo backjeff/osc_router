@@ -1,4 +1,14 @@
 {
   "forward_unmapped": true,
-  "mappings": []
+  "listen_port": 7000,
+  "target_ip": "127.0.0.1",
+  "target_port": 7000,
+  "mappings": [
+    {
+      "in_address": "/source",
+      "in_value": 1,
+      "out_address": "/layer1/clip1/connect",
+      "out_args": [1]
+    }
+  ]
 }

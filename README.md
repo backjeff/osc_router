@@ -1,9 +1,9 @@
-## OSC Routing
+## OSC Router
 
 **Version 1.0.0**
 
-A simple, standalone OSC routing tool with GUI, ETL-style mapping, live debug logging, and external JSON configuration.
-Useful for routing and transforming OSC messages between applications such as **Reaper**, **Resolume**, lighting consoles, controllers, or any OSC-enabled device.
+A simple, standalone OSC router tool with GUI, ETL-style mapping, live debug logging, and external JSON configuration.
+Useful for router and transforming OSC messages between applications such as **Reaper**, **Resolume**, lighting consoles, controllers, or any OSC-enabled device.
 
 ## Features
 
